@@ -44,20 +44,31 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 			S[couche] = new Double[NbNeurones[couche]];
 		}
 	}
-	private static void apprentissage() {  
-		for(int i = 0 ; i < NbClasses ; i++)
-			for(int j = 0 ; j < NbEx ; j++)
-				propagation(data[i][j]);
-				retropropagation(i);
+	private static void apprentissage() {
+		for(int cpt = 0 ; cpt < NbApprent ; cpt ++)
+			for(int i = 0 ; i < NbClasses ; i++)
+				for(int j = 0 ; j < NbExApprent ; j++)
+				{
+					propagation(data[i][j]);
+					retropropagation(i);
+				}
 	}     
 	private static void evaluation() {
 		int classeTrouvee, Ok=0, PasOk=0;
 		for(int i=0; i<NbClasses; i++) {
-			for(int j=NbExApprent; j<NbEx; j++) { // parcourt les ex. de test
-				//---------- e faire              // calcul des N et S des neurones
+			for(int j=0; j<NbExApprent; j++) { // parcourt les ex. de test
+				propagation(data[i][j]);           // calcul des N et S des neurones
 				classeTrouvee = 0;                // recherche max parmi les sorties RN
-				//---------- e faire
-				//System.out.println("classe "+i+" classe trouvee "+classeTrouvee);
+				Double max = -2.;
+				for(int classe = 0; classe < NbClasses ; classe++)
+				{
+					if(S[NbCouches-1][classe] > max)
+					{
+						max = S[NbCouches-1][classe];
+						classeTrouvee = classe;
+					}
+				}
+				System.out.println("classe "+i+" classe trouvee "+classeTrouvee);
 				if (i==classeTrouvee) Ok++; else PasOk++;
 			}
 		}
@@ -102,28 +113,37 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 			N[NbCouches -1][i] = Ni;
 			S[NbCouches -1][i] = fSigmoide(Ni);			
 		}
-		
-		for(int couche = 0 ; couche<NbCouches ; couche++)
-			for(int i = 0 ; i < NbNeurones[couche] ; i++)
-				System.out.println(couche+","+i+"->"+S[couche][i]);
 	}
 	private static void retropropagation(int classe) {
 		
-		
+		// tableau des deltas avec deltas[0] les deltas calculés de la couche 1
+		Double deltas[][] = new Double[NbCouches -1][];
+
+		deltas[NbCouches - 2] = new Double[NbNeurones[NbCouches - 1]];
 		for(int i = 0 ; i < NbNeurones[NbCouches - 1] ; i++)
 		{
 			double delta = (S[NbCouches - 1][i] - ((i==classe)?1:-1))*dfSigmoide(N[NbCouches - 1][i]);
-			for(int j = 0 ; j< NbNeurones[NbCouches - 2] ; j++)
-				poids[NbCouches - 2][i][j] += -1 * coeffApprent * delta * N[NbCouches - 1][i];
+			deltas[NbCouches - 2][i] = delta;
 		}
 		
 		for(int couche = NbCouches -2 ; couche > 0 ; couche -- )
 		{
-			double delta = 0.;
+			deltas[couche - 1] = new Double[NbNeurones[couche]];
 			for(int i = 0 ; i < NbNeurones[couche] ; i++)
 			{
-				
+				double delta = 0.;
+				for(int k = 0 ; k < NbNeurones[couche + 1] ; k++)
+					delta += deltas[couche][k] * poids[couche][k][i];
+				delta *= dfSigmoide(N[couche][i]);
+				deltas[couche - 1][i] = delta;
 			}			
+		}
+		
+		for( int couche = NbCouches -1 ; couche > 0 ; couche --)
+		{
+			for(int i = 0 ; i < NbNeurones[couche] ; i++)
+				for(int j = 0 ; j < NbNeurones[couche - 1] ; j ++)
+					poids[couche - 1][i][j] += -1 * coeffApprent * deltas[couche-1][i] * N[couche][i];
 		}
 	}   
 	private static void lectureFichier() {
