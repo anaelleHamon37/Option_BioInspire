@@ -44,6 +44,7 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 			S[couche] = new Double[NbNeurones[couche]];
 		}
 	}
+	
 	private static void apprentissage() {
 		for(int cpt = 0 ; cpt < NbApprent ; cpt ++)
 			for(int i = 0 ; i < NbClasses ; i++)
@@ -52,7 +53,8 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 					propagation(data[i][j]);
 					retropropagation(i);
 				}
-	}     
+	}
+	
 	private static void evaluation() {
 		int classeTrouvee, Ok=0, PasOk=0;
 		for(int i=0; i<NbClasses; i++) {
@@ -74,6 +76,7 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 		}
 		System.out.println("Taux de reconnaissance : "+(Ok*100./(Ok+PasOk)));
 	}
+	
 	private static void propagation(Double X[]) {
 		//première couche
 		for(int i = 0 ; i< NbCaract ; i++)
