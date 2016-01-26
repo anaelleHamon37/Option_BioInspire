@@ -1,7 +1,7 @@
 package ReseauNeurone;
 import java.io.*;
 /**
- * @author hubert.cardot
+ * @author Heldmaier Nicolas et Hamon Anaëlle
  */
 public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 
@@ -16,13 +16,7 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 
 	private static Double dfSigmoide(Double x) {       // df()
 		return coeffSigmoide/Math.pow(Math.cosh(coeffSigmoide*x),2); } 
-
-	public static void main(String[] args) {
-		System.out.println("Caches="+NbCaches+" App="+NbApprent+" coef="+coeffApprent);
-		initialisation();
-		apprentissage();
-		evaluation();
-	}   
+	
 	private static void initialisation() {
 		lectureFichier(); 
 		//Allocation et initialisation aleatoire des poids
@@ -84,14 +78,14 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 			N[0][i] = X[i];
 			S[0][i] = fSigmoide(X[i]);
 		}		
+		// theta
 		N[0][NbCaract] = 1.0;
 		S[0][NbCaract] = fSigmoide(1.0);
 		
 		//couche cachées
 		for(int couche = 1 ; couche<NbCouches -1 ; couche++)
 		{
-			for(int i = 0 ; i < NbNeurones[couche] -1 ; i++)
-			{
+			for(int i = 0 ; i < NbNeurones[couche] -1 ; i++)	{
 				double Ni = 0.;
 				for (int j = 0 ; j < NbNeurones[couche - 1] ; j++)
 				{
@@ -100,7 +94,6 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 				N[couche][i] = Ni;
 				S[couche][i] = fSigmoide(Ni);				
 			}
-
 			N[couche][NbCaches] = 1.0;
 			S[couche][NbCaches] = fSigmoide(1.0);	
 		}
@@ -122,18 +115,19 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 		// tableau des deltas avec deltas[0] les deltas calculés de la couche 1
 		Double deltas[][] = new Double[NbCouches -1][];
 
+		// calcul des deltas
+		
+		// couche de sortie
 		deltas[NbCouches - 2] = new Double[NbNeurones[NbCouches - 1]];
-		for(int i = 0 ; i < NbNeurones[NbCouches - 1] ; i++)
-		{
-			double delta = (S[NbCouches - 1][i] - ((i==classe)?1:-1))*dfSigmoide(N[NbCouches - 1][i]);
-			deltas[NbCouches - 2][i] = delta;
+		for(int i = 0 ; i < NbNeurones[NbCouches - 1] ; i++)	{
+			// si c'est la bonne classe : di = 1 sinon = -1
+			deltas[NbCouches - 2][i] = (S[NbCouches - 1][i] - ((i==classe)?1:-1))*dfSigmoide(N[NbCouches - 1][i]);
 		}
 		
-		for(int couche = NbCouches -2 ; couche > 0 ; couche -- )
-		{
+		// autres couches
+		for(int couche = NbCouches -2 ; couche > 0 ; couche -- )	{
 			deltas[couche - 1] = new Double[NbNeurones[couche]];
-			for(int i = 0 ; i < NbNeurones[couche] ; i++)
-			{
+			for(int i = 0 ; i < NbNeurones[couche] ; i++)	{
 				double delta = 0.;
 				for(int k = 0 ; k < NbNeurones[couche + 1] ; k++)
 					delta += deltas[couche][k] * poids[couche][k][i];
@@ -142,11 +136,12 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 			}			
 		}
 		
+		// affectation des nouveaux poids
 		for( int couche = NbCouches -1 ; couche > 0 ; couche --)
 		{
 			for(int i = 0 ; i < NbNeurones[couche] ; i++)
 				for(int j = 0 ; j < NbNeurones[couche - 1] ; j ++)
-					poids[couche - 1][i][j] += -1 * coeffApprent * deltas[couche-1][i] * N[couche][i];
+					poids[couche - 1][i][j] += -1 * coeffApprent * deltas[couche-1][i] * S[couche-1][j];
 		}
 	}   
 	private static void lectureFichier() {
@@ -170,4 +165,13 @@ public class MLP {  // pg du MLP, reseau de neurones a retropropagation
 		}
 		catch (Exception e) { System.out.println(e.toString()); }
 	}
+	
+
+	// MAIN
+	public static void main(String[] args) {
+		System.out.println("Caches="+NbCaches+" App="+NbApprent+" coef="+coeffApprent);
+		initialisation();
+		apprentissage();
+		evaluation();
+	}   
 }  //------------------fin classe MLP--------------------
